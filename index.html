@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sorties Cinéma & Netflix France</title>
+<style>
+/* --- Style Netflix --- */
+body {
+    margin: 0;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #141414;
+    color: #fff;
+}
+header {
+    background-color: #141414;
+    padding: 16px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #333;
+}
+header h1 { font-size:1.5rem; color:#e50914; margin:0;}
+.controls { display:flex; gap:12px; flex-wrap:wrap; }
+select, button {
+    background-color: #333; color:#fff; border:none; padding:6px 12px; border-radius:4px; font-size:0.9rem; cursor:pointer;
+}
+select:hover, button:hover { background-color:#e50914; color:#fff; }
+
+/* Carrousel */
+.carousel { margin:16px 0; position:relative; }
+.carousel h2 { margin:0 0 8px 16px; font-size:1.2rem; }
+.carousel-container {
+    display:flex; overflow-x:auto; scroll-behavior:smooth; padding-left:16px; gap:12px;
+}
+.carousel-container::-webkit-scrollbar { height:8px; }
+.carousel-container::-webkit-scrollbar-thumb { background-color:#555; border-radius:4px; }
+.movie-card {
+    flex:0 0 auto; width:160px; background-color:#1c1c1c; border-radius:8px; overflow:hidden;
+    transition: transform 0.2s, box-shadow 0.2s; display:flex; flex-direction:column;
+}
+.movie-card:hover { transform:scale(1.08); box-shadow:0 10px 20px rgba(0,0,0,0.6);}
+.movie-card img { width:100%; display:block; border-bottom:1px solid #333;}
+.movie-card div { padding:6px; display:flex; flex-direction:column; justify-content:space-between;}
+.movie-card h3 { font-size:0.95rem; margin:0 0 4px 0; color:#fff; }
+.movie-card p { font-size:0.8rem; color:#b3b3b3; margin:2px 0; }
+
+.carousel-btn {
+    position:absolute; top:50%; transform:translateY(-50%);
+    background-color:rgba(20,20,20,0.7); border:none; color:#fff; padding:8px; cursor:pointer; border-radius:50%; z-index:10;
+}
+.carousel-btn:hover { background-color: rgba(229,9,20,0.9); }
+.carousel-btn.left { left:8px; }
+.carousel-btn.right { right:8px; }
+
+footer { text-align:center; padding:12px; font-size:0.85rem; color:#888; border-top:1px solid #333; }
+
+@media (max-width:600px){
+    header { flex-direction:column; align-items:flex-start; }
+    .movie-card { width:120px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+    <h1>Sorties Cinéma & Netflix France</h1>
+    <div class="controls">
+        <label>
+            Plateforme
+            <select id="platform">
+                <option value="">Toutes</option>
+                <option value="cinema">Cinéma</option>
+                <option value="netflix">Netflix</option>
+            </select>
+        </label>
+        <label>
+            Actualiser toutes les
+            <select id="interval">
+                <option value="60">60s</option>
+                <option value="120">120s</option>
+                <option value="300">300s</option>
+            </select>
+            secondes
+        </label>
+        <button id="refresh">Actualiser</button>
+    </div>
+</header>
+
+<main>
+    <section class="carousel" id="cinema-carousel">
+        <h2>Sorties Cinéma</h2>
+        <button class="carousel-btn left">&#8249;</button>
+        <div class="carousel-container"></div>
+        <button class="carousel-btn right">&#8250;</button>
+    </section>
+
+    <section class="carousel" id="netflix-carousel">
+        <h2>Nouveautés Netflix</h2>
+        <button class="carousel-btn left">&#8249;</button>
+        <div class="carousel-container"></div>
+        <button class="carousel-btn right">&#8250;</button>
+    </section>
+</main>
+
+<footer>
+    <div id="status"></div>
+</footer>
+
+<script>
+const apiKey = 'ee5b9babb756eae4defc4d0a0003824f';
+const refreshBtn = document.getElementById('refresh');
+const intervalEl = document.getElementById('interval');
+const platformEl = document.getElementById('platform');
+const statusEl = document.getElementById('status');
+let timer = null;
+
+// Récupérer les films
+async function fetchMovies(platform){
+    const url = new URL('https://api.themoviedb.org/3/discover/movie');
+    url.searchParams.append('api_key', apiKey);
+    url.searchParams.append('language', 'fr-FR');
+    if(platform==='cinema'){
+        url.searchParams.append('primary_release_date.gte', '2025-09-01');
+        url.searchParams.append('primary_release_date.lte', '2025-09-30');
+    } else if(platform==='netflix'){
+        url.searchParams.append('with_watch_providers', '8');
+        url.searchParams.append('watch_region', 'FR');
+    }
+    const resp = await fetch(url);
+    const data = await resp.json();
+    return data.results;
+}
+
+// Affichage carrousel
+function renderCarousel(container, movies){
+    container.innerHTML='';
+    if(!movies || movies.length===0){ container.innerHTML='<p>Aucun film trouvé.</p>'; return; }
+    movies.forEach(m=>{
+        const card = document.createElement('div'); card.className='movie-card';
+        const titleFR = m.title || m.original_title;
+        const overviewFR = m.overview || '';
+        card.innerHTML = `
+            <img src="https://image.tmdb.org/t/p/w200${m.poster_path}" alt="${titleFR}">
+            <div>
+                <h3>${titleFR}</h3>
+                <p>${overviewFR.slice(0,100)}</p>
+                <p><strong>Sortie:</strong> ${m.release_date}</p>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// Navigation carrousel
+function setupCarousel(carousel){
+    const container = carousel.querySelector('.carousel-container');
+    const left = carousel.querySelector('.carousel-btn.left');
+    const right = carousel.querySelector('.carousel-btn.right');
+    left.onclick = ()=> container.scrollBy({left:-300, behavior:'smooth'});
+    right.onclick = ()=> container.scrollBy({left:300, behavior:'smooth'});
+}
+
+// Charger tous les carrousels
+async function loadMovies(){
+    const platform = platformEl.value;
+    statusEl.textContent='Chargement…';
+    try{
+        if(!platform || platform==='cinema'){
+            const cinemaMovies = await fetchMovies('cinema');
+            renderCarousel(document.querySelector('#cinema-carousel .carousel-container'), cinemaMovies);
+        }
+        if(!platform || platform==='netflix'){
+            const netflixMovies = await fetchMovies('netflix');
+            renderCarousel(document.querySelector('#netflix-carousel .carousel-container'), netflixMovies);
+        }
+        statusEl.textContent='Films chargés.';
+    } catch(e){
+        statusEl.textContent='Erreur lors du chargement des films.';
+        console.error(e);
+    }
+}
+
+// Auto-refresh
+function startAutoRefresh(){
+    if(timer) clearInterval(timer);
+    const interval = parseInt(intervalEl.value)*1000;
+    timer = setInterval(loadMovies, interval);
+}
+
+// Événements
+refreshBtn.addEventListener('click', loadMovies);
+intervalEl.addEventListener('change', startAutoRefresh);
+platformEl.addEventListener('change', loadMovies);
+
+// Initialisation
+document.querySelectorAll('.carousel').forEach(c=>setupCarousel(c));
+loadMovies();
+startAutoRefresh();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,159 @@
+/* Style général Netflix-like */
+body {
+    margin: 0;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #141414;
+    color: #ffffff;
+}
+
+header {
+    background-color: #141414;
+    padding: 16px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #333;
+}
+
+header h1 {
+    font-size: 1.5rem;
+    color: #e50914; /* rouge Netflix */
+    margin: 0;
+}
+
+.controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+select, button {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+select:hover, button:hover {
+    background-color: #e50914;
+    color: #fff;
+}
+
+/* Carrousel */
+.carousel {
+    margin: 16px 0;
+    position: relative;
+}
+
+.carousel h2 {
+    margin: 0 0 8px 16px;
+    font-size: 1.2rem;
+}
+
+.carousel-container {
+    display: flex;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding-left: 16px;
+    gap: 12px;
+}
+
+.carousel-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.carousel-container::-webkit-scrollbar-thumb {
+    background-color: #555;
+    border-radius: 4px;
+}
+
+.movie-card {
+    flex: 0 0 auto;
+    width: 160px;
+    background-color: #1c1c1c;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.movie-card:hover {
+    transform: scale(1.08);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+}
+
+.movie-card img {
+    width: 100%;
+    display: block;
+    border-bottom: 1px solid #333;
+}
+
+.movie-card div {
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.movie-card h3 {
+    font-size: 0.95rem;
+    margin: 0 0 4px 0;
+    color: #ffffff;
+}
+
+.movie-card p {
+    font-size: 0.8rem;
+    color: #b3b3b3;
+    margin: 2px 0;
+}
+
+/* Boutons de navigation */
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(20,20,20,0.7);
+    border: none;
+    color: #fff;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 50%;
+    z-index: 10;
+}
+
+.carousel-btn:hover {
+    background-color: rgba(229,9,20,0.9);
+}
+
+.carousel-btn.left {
+    left: 8px;
+}
+
+.carousel-btn.right {
+    right: 8px;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 12px;
+    font-size: 0.85rem;
+    color: #888;
+    border-top: 1px solid #333;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .movie-card {
+        width: 120px;
+    }
+}
